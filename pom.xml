@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.zhenchao</groupId>
-    <artifactId>commons-spi</artifactId>
+    <artifactId>spiex</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>commons-spi</name>
+    <name>spiex</name>
     <url>http://maven.apache.org</url>
 
     <properties>

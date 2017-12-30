@@ -1,3 +1,3 @@
-# commons-spi
+## spiex
 
-java service provider interface enhancer
+Java Service Provider Interface Enhancer
