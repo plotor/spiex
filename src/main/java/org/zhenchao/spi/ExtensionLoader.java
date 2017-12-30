@@ -633,6 +633,14 @@ public class ExtensionLoader<T> {
                 }
                 String[] mapping = adaptive.mapping();
                 if (ArrayUtils.isEmpty(mapping)) {
+                    if(StringUtils.isNotBlank(cachedDefaultName)) {
+                        log.info("No adaptive config found and use default extension '" + cachedDefaultName + "'");
+                        Object instance = ExtensionLoader.getExtensionLoader(type).getExtension(cachedDefaultName);
+                        if (null == instance) {
+                            throw new IllegalStateException("no default extension found by name : " + cachedDefaultName + ", type : " + type.getName());
+                        }
+                        return method.invoke(instance, args);
+                    }
                     throw new IllegalStateException("adaptive mapping is missing, index " + index + ", args length " + args.length + ", pointcut : " + type.getName() + "#" + method.getName());
                 }
                 Object arg = args[index];

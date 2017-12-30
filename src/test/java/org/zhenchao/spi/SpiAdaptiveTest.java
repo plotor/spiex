@@ -23,16 +23,9 @@ public class SpiAdaptiveTest {
 
     @Test
     public void getAdaptiveExtension() throws Exception {
-        // 没有指定决策因子
-        try {
-            SimpleExt ext = ExtensionLoader.getExtensionLoader(SimpleExt.class).getAdaptiveExtension();
-            ext.one(2, "haha");
-            Assert.fail();
-        } catch (IllegalStateException e) {
-            e.printStackTrace();
-        }
-
+        // 没有指定决策因子，使用默认的
         SimpleExt ext = ExtensionLoader.getExtensionLoader(SimpleExt.class).getAdaptiveExtension();
+        assertEquals("Ext1Impl1-one", ext.one(2, "haha"));
 
         // 默认以第一个参数作为决策因子
         assertEquals("Ext1Impl1-two", ext.two(1, "haha"));
