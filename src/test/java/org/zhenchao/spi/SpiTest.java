@@ -7,12 +7,14 @@ import org.junit.Test;
 import org.zhenchao.spi.adaptive.AdaptiveExt;
 import org.zhenchao.spi.adaptive.impl.AdaptiveExtWithManualAdaptive;
 import org.zhenchao.spi.ext1.SimpleExt;
+import org.zhenchao.spi.ext2.ExtWithInject;
+import org.zhenchao.spi.ext3.WrappedExt;
 
 /**
  * @author zhenchao.wang 2017-12-29 16:55
  * @version 1.0.0
  */
-public class SpiAdaptiveTest {
+public class SpiTest {
 
     @Test
     public void manualAdaptiveClass() throws Exception {
@@ -22,17 +24,17 @@ public class SpiAdaptiveTest {
     }
 
     @Test
-    public void getAdaptiveExtension() throws Exception {
+    public void adaptiveExtension() throws Exception {
         // 没有指定决策因子，使用默认的
         SimpleExt ext = ExtensionLoader.getExtensionLoader(SimpleExt.class).getAdaptiveExtension();
-        assertEquals("Ext1Impl1-one", ext.one(2, "haha"));
+        assertEquals("Ext1Impl1-one", ext.one(2, "hello"));
 
         // 默认以第一个参数作为决策因子
-        assertEquals("Ext1Impl1-two", ext.two(1, "haha"));
-        assertEquals("Ext1Impl2-two", ext.two(2, "haha"));
-        assertEquals("Ext1Impl3-two", ext.two(3, "haha"));
+        assertEquals("Ext1Impl1-two", ext.two(1, "hello"));
+        assertEquals("Ext1Impl2-two", ext.two(2, "hello"));
+        assertEquals("Ext1Impl3-two", ext.two(3, "hello"));
         try {
-            ext.two(0, "haha");
+            ext.two(0, "hello");
             Assert.fail();
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
@@ -43,7 +45,7 @@ public class SpiAdaptiveTest {
         assertEquals("Ext1Impl2-three", ext.three(2, "b"));
         assertEquals("Ext1Impl3-three", ext.three(3, "c"));
         try {
-            ext.three(1, "haha");
+            ext.three(1, "hello");
             Assert.fail();
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
@@ -56,6 +58,21 @@ public class SpiAdaptiveTest {
         } catch (UnsupportedOperationException e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void adaptiveExtensionWithInject() throws Exception {
+        ExtWithInject ext = ExtensionLoader.getExtensionLoader(ExtWithInject.class).getExtension("impl1");
+        assertEquals("ExtWithInjectImpl1-echo", ext.echo(1, "hello"));
+    }
+
+    @Test
+    public void wrapperExtension() throws Exception {
+        WrappedExt ext1 = ExtensionLoader.getExtensionLoader(WrappedExt.class).getExtension("impl1");
+        ext1.echo(1, "hello");
+
+        WrappedExt ext2 = ExtensionLoader.getExtensionLoader(WrappedExt.class).getExtension("impl2");
+        ext2.echo(1, "hello");
     }
 
 }
