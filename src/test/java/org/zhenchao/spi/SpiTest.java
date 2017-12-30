@@ -9,6 +9,10 @@ import org.zhenchao.spi.adaptive.impl.AdaptiveExtWithManualAdaptive;
 import org.zhenchao.spi.ext1.SimpleExt;
 import org.zhenchao.spi.ext2.ExtWithInject;
 import org.zhenchao.spi.ext3.WrappedExt;
+import org.zhenchao.spi.ext4.Element;
+import org.zhenchao.spi.ext4.ElementFactorResolver;
+import org.zhenchao.spi.ext4.ExtWithFactorResolver;
+import org.zhenchao.spi.support.FactorResolver;
 
 /**
  * @author zhenchao.wang 2017-12-29 16:55
@@ -73,6 +77,25 @@ public class SpiTest {
 
         WrappedExt ext2 = ExtensionLoader.getExtensionLoader(WrappedExt.class).getExtension("impl2");
         ext2.echo(1, "hello");
+    }
+
+    @Test
+    public void factorResolver() throws Exception {
+        ExtWithFactorResolver ext = ExtensionLoader.getExtensionLoader(ExtWithFactorResolver.class)
+                .setFactorResolver(new ElementFactorResolver()).getAdaptiveExtension();
+
+        assertEquals("FactorExtImpl1-one", ext.one(null, "hello"));
+        assertEquals("FactorExtImpl2-two", ext.two(new Element("zhenchao", 2), "hello", new FactorResolver() {
+            @Override
+            public String resolve(Object arg) {
+                if(arg instanceof Element) {
+                    return String.valueOf(((Element) arg).getAge());
+                }
+                throw new IllegalArgumentException("not element type");
+            }
+        }));
+        assertEquals("FactorExtImpl3-three", ext.three(new Element("c", 1), "hello"));
+
     }
 
 }

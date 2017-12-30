@@ -8,9 +8,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhenchao.spi.factory.ExtensionFactory;
+import org.zhenchao.spi.support.DefaultFactorResolver;
+import org.zhenchao.spi.support.FactorResolver;
 import org.zhenchao.spi.support.Holder;
 import org.zhenchao.spi.util.AnnotationUtils;
-import org.zhenchao.spi.util.TypeUtils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -66,6 +67,8 @@ public class ExtensionLoader<T> {
     private volatile Throwable createAdaptiveInstanceError;
 
     private Set<Class<?>> cachedWrapperClasses;
+
+    private FactorResolver factorResolver = new DefaultFactorResolver();
 
     private Map<String, IllegalStateException> exceptions = new ConcurrentHashMap<String, IllegalStateException>();
 
@@ -633,7 +636,7 @@ public class ExtensionLoader<T> {
                 }
                 String[] mapping = adaptive.mapping();
                 if (ArrayUtils.isEmpty(mapping)) {
-                    if(StringUtils.isNotBlank(cachedDefaultName)) {
+                    if (StringUtils.isNotBlank(cachedDefaultName)) {
                         log.info("No adaptive config found and use default extension '" + cachedDefaultName + "'");
                         Object instance = ExtensionLoader.getExtensionLoader(type).getExtension(cachedDefaultName);
                         if (null == instance) {
@@ -643,11 +646,16 @@ public class ExtensionLoader<T> {
                     }
                     throw new IllegalStateException("adaptive mapping is missing, index " + index + ", args length " + args.length + ", pointcut : " + type.getName() + "#" + method.getName());
                 }
-                Object arg = args[index];
-                if (TypeUtils.isNotPrimitiveInstance(arg)) {
-                    throw new IllegalStateException("adaptive param is not primitive, type : " + (null == arg ? null : arg.getClass()) + ", pointcut : " + type.getName() + "#" + method.getName());
+
+                // 获取参数解析
+                FactorResolver resolver = factorResolver;
+                for (final Object arg : args) {
+                    if (arg instanceof FactorResolver) {
+                        resolver = (FactorResolver) arg;
+                    }
                 }
-                String pv = String.valueOf(arg), factor = null;
+
+                String pv = resolver.resolve(args[index]), factor = null;
                 for (final String mpg : mapping) {
                     String text = StringUtils.trimToEmpty(mpg);
                     if (StringUtils.isEmpty(mpg)) continue;
@@ -679,4 +687,8 @@ public class ExtensionLoader<T> {
         return this.getClass().getName() + "[" + type.getName() + "]";
     }
 
+    public ExtensionLoader<T> setFactorResolver(FactorResolver factorResolver) {
+        this.factorResolver = factorResolver;
+        return this;
+    }
 }
