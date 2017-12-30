@@ -4,7 +4,7 @@ import org.zhenchao.spi.Adaptive;
 import org.zhenchao.spi.SPI;
 
 @SPI
-public interface HasAdaptiveExt {
+public interface AdaptiveExt {
 
     @Adaptive()
     String echo(int pt, String s);

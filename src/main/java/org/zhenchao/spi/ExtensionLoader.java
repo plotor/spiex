@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhenchao.spi.factory.ExtensionFactory;
 import org.zhenchao.spi.support.Holder;
+import org.zhenchao.spi.util.AnnotationUtils;
 import org.zhenchao.spi.util.TypeUtils;
 
 import java.io.BufferedReader;
@@ -530,7 +531,7 @@ public class ExtensionLoader<T> {
                                                 wrappers.add(clazz);
                                             } catch (NoSuchMethodException e) {
                                                 clazz.getConstructor();
-                                                if (StringUtils.isNotBlank(name)) {
+                                                if (StringUtils.isBlank(name)) {
                                                     // 按照策略获取实现类的扩展名
                                                     name = this.createExtensionName(clazz);
                                                     if (StringUtils.isBlank(name)) {
@@ -622,29 +623,21 @@ public class ExtensionLoader<T> {
         enhancer.setCallback(new MethodInterceptor() {
             @Override
             public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
-                Adaptive adaptive = method.getAnnotation(Adaptive.class);
+                Adaptive adaptive = AnnotationUtils.getInheritedAnnotation(Adaptive.class, method);
                 if (null == adaptive) {
                     throw new UnsupportedOperationException("method is not adaptive, type : " + type.getName() + ", method : " + method.getName());
                 }
                 int index = adaptive.index();
-                String[] mapping = adaptive.mapping();
                 if (index < 0 || index >= args.length) {
-                    for (int i = 0; i < args.length; i++) {
-                        Factor factor = args[i].getClass().getAnnotation(Factor.class);
-                        if (null != factor) {
-                            log.info("Get adaptive mapping by annotation, param[value={}, type={}]", args[i], args[i].getClass());
-                            mapping = factor.mapping();
-                            index = i;
-                            break;
-                        }
-                    }
+                    throw new IllegalArgumentException("illegal adaptive index " + index + ", args length " + args.length + ", pointcut : " + type.getName() + "#" + method.getName());
                 }
+                String[] mapping = adaptive.mapping();
                 if (ArrayUtils.isEmpty(mapping)) {
-                    throw new IllegalStateException("adaptive mapping is missing, index " + index + ", args length " + args.length + ", type : " + type.getName());
+                    throw new IllegalStateException("adaptive mapping is missing, index " + index + ", args length " + args.length + ", pointcut : " + type.getName() + "#" + method.getName());
                 }
                 Object arg = args[index];
                 if (TypeUtils.isNotPrimitiveInstance(arg)) {
-                    throw new IllegalStateException("adaptive param is not primitive type : " + (null == arg ? null : arg.getClass()));
+                    throw new IllegalStateException("adaptive param is not primitive, type : " + (null == arg ? null : arg.getClass()) + ", pointcut : " + type.getName() + "#" + method.getName());
                 }
                 String pv = String.valueOf(arg), factor = null;
                 for (final String mpg : mapping) {
@@ -657,6 +650,7 @@ public class ExtensionLoader<T> {
                     }
                     if (name.equalsIgnoreCase(pv)) {
                         factor = value;
+                        break;
                     }
                 }
                 if (StringUtils.isBlank(factor)) {

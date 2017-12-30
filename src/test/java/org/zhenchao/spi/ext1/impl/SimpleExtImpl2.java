@@ -5,18 +5,23 @@ import org.zhenchao.spi.ext1.SimpleExt;
 public class SimpleExtImpl2 implements SimpleExt {
 
     @Override
-    public String echo(int pt, String s) {
-        return "Ext1Impl2-echo";
+    public String one(int pt, String s) {
+        return "Ext1Impl2-one";
     }
 
     @Override
-    public String yell(int pt, String s) {
-        return "Ext1Impl2-yell";
+    public String two(int pt, String s) {
+        return "Ext1Impl2-two";
     }
 
     @Override
-    public String bang(int pt, int i) {
-        return "bang2";
+    public String three(int pt, String s) {
+        return "Ext1Impl2-three";
+    }
+
+    @Override
+    public String four(int pt, String s) {
+        return "Ext1Impl2-four";
     }
 
 }

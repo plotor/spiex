@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD})
 public @interface Adaptive {
 
-    int index() default -1;
+    int index() default 0;
 
     String[] mapping() default {};
 
