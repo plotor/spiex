@@ -12,6 +12,7 @@ import org.zhenchao.spi.ext3.WrappedExt;
 import org.zhenchao.spi.ext4.Element;
 import org.zhenchao.spi.ext4.ElementFactorResolver;
 import org.zhenchao.spi.ext4.ExtWithFactorResolver;
+import org.zhenchao.spi.support.ExtensionLoader;
 import org.zhenchao.spi.support.FactorResolver;
 
 /**

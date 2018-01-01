@@ -1,6 +1,6 @@
 package org.zhenchao.spi.factory;
 
-import org.zhenchao.spi.ExtensionLoader;
+import org.zhenchao.spi.support.ExtensionLoader;
 import org.zhenchao.spi.SPI;
 
 /**

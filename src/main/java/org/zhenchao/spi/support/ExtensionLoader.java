@@ -1,4 +1,4 @@
-package org.zhenchao.spi;
+package org.zhenchao.spi.support;
 
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
@@ -7,10 +7,9 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zhenchao.spi.Adaptive;
+import org.zhenchao.spi.SPI;
 import org.zhenchao.spi.factory.ExtensionFactory;
-import org.zhenchao.spi.support.DefaultFactorResolver;
-import org.zhenchao.spi.support.FactorResolver;
-import org.zhenchao.spi.support.Holder;
 import org.zhenchao.spi.util.AnnotationUtils;
 
 import java.io.BufferedReader;

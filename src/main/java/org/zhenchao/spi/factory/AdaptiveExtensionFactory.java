@@ -1,7 +1,7 @@
 package org.zhenchao.spi.factory;
 
 import org.zhenchao.spi.Adaptive;
-import org.zhenchao.spi.ExtensionLoader;
+import org.zhenchao.spi.support.ExtensionLoader;
 
 import java.util.ArrayList;
 import java.util.Collections;

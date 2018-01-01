@@ -1,7 +1,7 @@
 package org.zhenchao.spi.adaptive.impl;
 
 import org.zhenchao.spi.Adaptive;
-import org.zhenchao.spi.ExtensionLoader;
+import org.zhenchao.spi.support.ExtensionLoader;
 import org.zhenchao.spi.adaptive.AdaptiveExt;
 
 @Adaptive
