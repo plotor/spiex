@@ -1,5 +1,6 @@
 package org.zhenchao.spi.spring.ext3;
 
+import org.junit.Assert;
 import org.springframework.stereotype.Service;
 import org.zhenchao.spi.support.FactorResolver;
 
@@ -17,6 +18,9 @@ public class Ext3ServiceImpl2 implements Ext3Service {
 
     @Override
     public String two(String s, int i, FactorResolver factorResolver) {
+        String result = this.four(s, i);
+        System.out.println("output : " + result);
+        Assert.assertEquals("Ext3ServiceImpl2-four", result);
         return "Ext3ServiceImpl2-two";
     }
 

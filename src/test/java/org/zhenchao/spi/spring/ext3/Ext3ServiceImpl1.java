@@ -1,5 +1,6 @@
 package org.zhenchao.spi.spring.ext3;
 
+import org.junit.Assert;
 import org.springframework.stereotype.Service;
 import org.zhenchao.spi.support.FactorResolver;
 
@@ -8,7 +9,7 @@ import org.zhenchao.spi.support.FactorResolver;
  * @version 1.0.0
  */
 @Service("ext3_impl1")
-public class Ext3ServiceImpl1 implements Ext3Service{
+public class Ext3ServiceImpl1 implements Ext3Service {
 
     @Override
     public String one(String s) {
@@ -17,6 +18,9 @@ public class Ext3ServiceImpl1 implements Ext3Service{
 
     @Override
     public String two(String s, int i, FactorResolver factorResolver) {
+        String result = this.four(s, i);
+        System.out.println("output : " + result);
+        Assert.assertEquals("Ext3ServiceImpl1-four", result);
         return "Ext3ServiceImpl1-two";
     }
 
