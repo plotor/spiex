@@ -94,16 +94,19 @@ public class AdaptiveBeanFactoryPostProcessor implements BeanFactoryPostProcesso
 
     @SuppressWarnings("unchecked")
     private <T> T createAdaptiveExtensionInstance(final Class<T> type, final ConfigurableListableBeanFactory beanFactory) {
+        final Adaptee adaptee = type.getAnnotation(Adaptee.class);
         Method[] methods = type.getMethods();
-        boolean withoutAdaptiveAnnotation = true;
-        for (Method m : methods) {
-            if (m.isAnnotationPresent(Adaptive.class)) {
-                withoutAdaptiveAnnotation = false;
-                break;
+        boolean withoutAdaptiveAnnotation = ArrayUtils.isEmpty(adaptee.mapping());
+        if(withoutAdaptiveAnnotation) {
+            for (Method m : methods) {
+                if (m.isAnnotationPresent(Adaptive.class)) {
+                    withoutAdaptiveAnnotation = false;
+                    break;
+                }
             }
-        }
-        if (withoutAdaptiveAnnotation) {
-            throw new IllegalStateException("no adaptive method on extension " + type.getName() + ", refuse to create the adaptive class");
+            if (withoutAdaptiveAnnotation) {
+                throw new IllegalStateException("no adaptive method on extension " + type.getName() + ", refuse to create the adaptive class");
+            }
         }
 
         // 基于动态代理生成对应的 adaptive 类
@@ -113,17 +116,21 @@ public class AdaptiveBeanFactoryPostProcessor implements BeanFactoryPostProcesso
         enhancer.setCallback(new MethodInterceptor() {
             @Override
             public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
-                Adaptive adaptive = AnnotationUtils.getInheritedAnnotation(Adaptive.class, method);
-                if (null == adaptive) {
-                    throw new UnsupportedOperationException("method is not adaptive, type : " + type.getName() + ", method : " + method.getName());
+                if(ArrayUtils.isEmpty(method.getParameterTypes())) {
+                    throw new UnsupportedOperationException();
                 }
-                int index = adaptive.index();
+                int index = adaptee.index();
+                String[] mapping = adaptee.mapping();
+                Adaptive adaptive = AnnotationUtils.getInheritedAnnotation(Adaptive.class, method);
+                if(null != adaptive) {
+                    index = adaptive.index() > 0 ? adaptive.index() : index;
+                    mapping = ArrayUtils.isNotEmpty(adaptive.mapping()) ? adaptive.mapping() : mapping;
+                }
                 if (index < 0 || index >= args.length) {
                     throw new IllegalArgumentException("illegal adaptive index " + index + ", args length " + args.length + ", pointcut : " + type.getName() + "#" + method.getName());
                 }
-                String[] mapping = adaptive.mapping();
                 if (ArrayUtils.isEmpty(mapping)) {
-                    throw new IllegalStateException("adaptive mapping is missing, index " + index + ", args length " + args.length + ", pointcut : " + type.getName() + "#" + method.getName());
+                    throw new IllegalStateException("illegal adaptive mapping, index " + index + ", args length " + args.length + ", pointcut : " + type.getName() + "#" + method.getName());
                 }
 
                 // 获取参数解析
@@ -153,7 +160,7 @@ public class AdaptiveBeanFactoryPostProcessor implements BeanFactoryPostProcesso
                 }
                 Object instance = beanFactory.getBean(factor);
                 if (null == instance) {
-                    throw new IllegalStateException("no extension found by name : " + factor + ", type : " + type.getName());
+                    throw new IllegalStateException("no bean found by name : " + factor + ", type : " + type.getName());
                 }
                 return method.invoke(instance, args);
             }

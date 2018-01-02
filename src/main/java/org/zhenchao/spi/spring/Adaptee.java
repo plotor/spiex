@@ -17,4 +17,19 @@ public @interface Adaptee {
 
     String value() default "";
 
+    /**
+     * 指定参数列表中作为决策因子的参数索引，以 0 开始计数
+     * 默认以第 1 个参数作为决策因子
+     *
+     * @return
+     */
+    int index() default 0;
+
+    /**
+     * 指定参数与扩展名称之间的映射关系
+     *
+     * @return
+     */
+    String[] mapping() default {};
+
 }

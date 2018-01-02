@@ -1,5 +1,6 @@
 package org.zhenchao.spi.spring;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
@@ -11,6 +12,8 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.zhenchao.spi.spring.ext1.DemoService;
 import org.zhenchao.spi.spring.ext2.Ext2Service;
+import org.zhenchao.spi.spring.ext3.Ext3Service;
+import org.zhenchao.spi.support.FactorResolver;
 
 /**
  * @author zhenchao.wang 2018-01-01 14:38
@@ -27,6 +30,10 @@ public class SpringAdaptiveTest extends AbstractJUnit4SpringContextTests {
     @Autowired
     @Qualifier("ext2_service_adapter")
     private Ext2Service ext2Service;
+
+    @Autowired
+    @Qualifier("Ext3Service-adapter")
+    private Ext3Service ext3Service;
 
     @Test
     public void display() throws Exception {
@@ -46,6 +53,38 @@ public class SpringAdaptiveTest extends AbstractJUnit4SpringContextTests {
     @Test
     public void manualAdaptiveInstance() throws Exception {
         Assert.assertEquals("ManualExt2Service", ext2Service.hello());
+    }
+
+    @Test
+    public void typeLevelAdaptive() throws Exception {
+        Assert.assertEquals("Ext3ServiceImpl1-one", ext3Service.one("a"));
+        Assert.assertEquals("Ext3ServiceImpl2-one", ext3Service.one("b"));
+
+        FactorResolver resolver = new FactorResolver() {
+            @Override
+            public String resolve(Object arg) {
+                Integer i = (Integer) arg;
+                if (1 == i) return "a";
+                if (2 == i) return "b";
+                return null;
+            }
+        };
+        Assert.assertEquals("Ext3ServiceImpl1-two", ext3Service.two(RandomStringUtils.randomAlphabetic(8), 1, resolver));
+        Assert.assertEquals("Ext3ServiceImpl2-two", ext3Service.two(RandomStringUtils.randomAlphabetic(8), 2, resolver));
+
+        Assert.assertEquals("Ext3ServiceImpl1-three", ext3Service.three(1));
+        Assert.assertEquals("Ext3ServiceImpl2-three", ext3Service.three(2));
+
+        Assert.assertEquals("Ext3ServiceImpl1-four", ext3Service.four(RandomStringUtils.randomAlphabetic(8), 1));
+        Assert.assertEquals("Ext3ServiceImpl2-four", ext3Service.four(RandomStringUtils.randomAlphabetic(8), 2));
+
+        try {
+            ext3Service.five();
+            Assert.fail();
+        } catch (Throwable e) {
+            Assert.assertTrue(e instanceof UnsupportedOperationException);
+        }
+
     }
 
     private String createAdapterBeanName(Class<?> clazz) {
