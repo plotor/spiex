@@ -1,6 +1,7 @@
-package org.zhenchao.spi.spring;
+package org.zhenchao.spi.spring.ext1;
 
 import org.zhenchao.spi.Adaptive;
+import org.zhenchao.spi.spring.Adaptee;
 
 /**
  * @author zhenchao.wang 2018-01-01 14:33

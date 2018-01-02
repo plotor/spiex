@@ -63,7 +63,9 @@ public class AdaptiveBeanFactoryPostProcessor implements BeanFactoryPostProcesso
                     if (itf.isAnnotationPresent(Adaptee.class)) {
                         String beanName = this.createAdapterBeanName(clazz);
                         Set<String> bns = new HashSet<String>(Arrays.asList(beanNames));
-                        if (bns.contains(beanName)) continue;
+                        if (bns.contains(beanName)) {
+                            throw new IllegalStateException("more than one adaptive class found, type : " + itf.getName());
+                        }
                         beanFactory.registerAlias(beanNames[0], beanName);
                         withManualAdapters.add(itf);
                     }

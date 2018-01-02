@@ -17,10 +17,12 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -38,7 +40,6 @@ public class ExtensionLoader<T> {
     private static final Logger log = LoggerFactory.getLogger(ExtensionLoader.class);
 
     private static final String INTERNAL_SERVICES_DIRECTORY = "META-INF/spi/internal/";
-
     private static final String SERVICES_DIRECTORY = "META-INF/spi/";
 
     private static final Pattern NAME_SEPARATOR = Pattern.compile("\\s*[,]+\\s*");
@@ -54,6 +55,8 @@ public class ExtensionLoader<T> {
     private final ConcurrentMap<Class<?>, String> cachedNames = new ConcurrentHashMap<Class<?>, String>();
 
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<Map<String, Class<?>>>();
+
+    private final List<String> extensionNames = new ArrayList<String>();
 
     private final ConcurrentMap<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<String, Holder<Object>>();
 
@@ -216,6 +219,18 @@ public class ExtensionLoader<T> {
     }
 
     /**
+     * 获取支持的扩展名称（按照配置顺序组织）
+     *
+     * @return
+     */
+    public List<String> getExtensionNames() {
+        if (extensionNames.isEmpty()) {
+            this.getExtensionClasses();
+        }
+        return extensionNames;
+    }
+
+    /**
      * 返回缺省的扩展点名，如果没有设置缺省则返回<code>null</code>。
      */
     public String getDefaultExtensionName() {
@@ -249,6 +264,7 @@ public class ExtensionLoader<T> {
             }
             cachedNames.put(clazz, name);
             cachedClasses.get().put(name, clazz);
+            extensionNames.add(name);
         } else {
             if (cachedAdaptiveClass != null) {
                 throw new IllegalStateException("adaptive extension already existed, extension : " + type);
@@ -286,12 +302,14 @@ public class ExtensionLoader<T> {
             cachedNames.put(clazz, name);
             cachedClasses.get().put(name, clazz);
             cachedInstances.remove(name);
+            extensionNames.remove(name);
         } else {
             if (cachedAdaptiveClass == null) {
-                throw new IllegalStateException("adaptive Extension not existed, extension : " + type);
+                throw new IllegalStateException("adaptive extension not existed, extension : " + type);
             }
             cachedAdaptiveClass = clazz;
             cachedAdaptiveInstance.set(null);
+            extensionNames.remove(name);
         }
     }
 
@@ -547,10 +565,11 @@ public class ExtensionLoader<T> {
                                                 }
                                                 // 以逗号分割
                                                 String[] names = NAME_SEPARATOR.split(name);
-                                                if (names != null && names.length > 0) {
+                                                if (ArrayUtils.isNotEmpty(names)) {
                                                     for (String n : names) {
                                                         if (!cachedNames.containsKey(clazz)) {
                                                             cachedNames.put(clazz, n);
+                                                            extensionNames.add(name);
                                                         }
                                                         Class<?> c = extensionClasses.get(n);
                                                         if (c == null) {

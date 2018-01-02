@@ -1,4 +1,4 @@
-package org.zhenchao.spi.spring;
+package org.zhenchao.spi.spring.ext1;
 
 import org.springframework.stereotype.Service;
 
