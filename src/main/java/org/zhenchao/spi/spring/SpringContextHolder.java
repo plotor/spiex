@@ -35,6 +35,10 @@ public class SpringContextHolder implements ApplicationContextAware {
         return applicationContext.getBean(requiredType, args);
     }
 
+    public static <T> T getProxyBean(Class<T> requiredType) {
+        return getBean(AdaptiveBeanFactoryPostProcessor.createProxyBeanName(requiredType), requiredType);
+    }
+
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         SpringContextHolder.applicationContext = applicationContext;
