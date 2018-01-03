@@ -10,7 +10,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.zhenchao.spi.spring.ext1.DemoService;
+import org.zhenchao.spi.DIoC;
+import org.zhenchao.spi.spring.ext1.Ext1Service;
 import org.zhenchao.spi.spring.ext2.Ext2Service;
 import org.zhenchao.spi.spring.ext3.Ext3Service;
 import org.zhenchao.spi.support.FactorResolver;
@@ -24,29 +25,23 @@ import org.zhenchao.spi.support.FactorResolver;
 public class SpringAdaptiveTest extends AbstractJUnit4SpringContextTests {
 
     @Autowired
-    @Qualifier("DemoService-adapter")
-    private DemoService demoService;
+    @Qualifier("Ext1Service$proxy")
+    private Ext1Service ext1Service;
 
     @Autowired
-    @Qualifier("ext2_service_adapter")
+    @Qualifier("ext2_service_proxy")
     private Ext2Service ext2Service;
 
     @Autowired
-    @Qualifier("Ext3Service-adapter")
+    @Qualifier("Ext3Service$proxy")
     private Ext3Service ext3Service;
 
     @Test
-    public void display() throws Exception {
-        String[] names = applicationContext.getBeanDefinitionNames();
-        System.out.println("bean names : \n" + StringUtils.join(names, "\n"));
-    }
-
-    @Test
     public void adaptiveInstance() throws Exception {
-        // DemoService demoService = applicationContext.getBean(this.createAdapterBeanName(DemoService.class), DemoService.class);
+        // Ext1Service ext1Service = applicationContext.getBean(this.createProxyBeanName(Ext1Service.class), Ext1Service.class);
         for (int i = 0; i < 10; i++) {
-            Assert.assertEquals("DemoServiceImpl1-zhenchao", demoService.hello(1, "zhenchao"));
-            Assert.assertEquals("DemoServiceImpl2-zhenchao", demoService.hello(2, "zhenchao"));
+            Assert.assertEquals("DemoServiceImpl1-zhenchao", ext1Service.hello(1, "zhenchao"));
+            Assert.assertEquals("DemoServiceImpl2-zhenchao", ext1Service.hello(2, "zhenchao"));
         }
     }
 
@@ -87,12 +82,12 @@ public class SpringAdaptiveTest extends AbstractJUnit4SpringContextTests {
 
     }
 
-    private String createAdapterBeanName(Class<?> clazz) {
-        if (!clazz.isInterface() || !clazz.isAnnotationPresent(Adaptee.class)) {
-            throw new IllegalArgumentException("adaptee must be interface and annotated with @Adaptee : " + clazz.getName());
+    private String createProxyBeanName(Class<?> clazz) {
+        if (!clazz.isInterface() || !clazz.isAnnotationPresent(DIoC.class)) {
+            throw new IllegalArgumentException(clazz.getName() + " must be interface and annotated with @" + DIoC.class.getName());
         }
-        Adaptee adaptee = clazz.getAnnotation(Adaptee.class);
-        return StringUtils.isNotBlank(adaptee.value()) ? adaptee.value().trim() : clazz.getSimpleName() + "-adapter";
+        DIoC di = clazz.getAnnotation(DIoC.class);
+        return StringUtils.isNotBlank(di.value()) ? di.value().trim() : clazz.getSimpleName() + "$proxy";
     }
 
 }

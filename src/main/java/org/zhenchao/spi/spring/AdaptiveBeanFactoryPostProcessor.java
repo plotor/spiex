@@ -13,6 +13,7 @@ import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.zhenchao.spi.Adaptive;
+import org.zhenchao.spi.DIoC;
 import org.zhenchao.spi.support.DefaultFactorResolver;
 import org.zhenchao.spi.support.FactorResolver;
 import org.zhenchao.spi.util.AnnotationUtils;
@@ -50,7 +51,7 @@ public class AdaptiveBeanFactoryPostProcessor implements BeanFactoryPostProcesso
             if (ArrayUtils.isEmpty(beanNames)) {
                 // 如果对应的 bean 之前没有注册过，则注册
                 try {
-                    withManualAdapters.addAll(this.registerAdapterBean(beanFactory, clazz));
+                    withManualAdapters.addAll(this.registerProxyBean(beanFactory, clazz));
                 } catch (IllegalAccessException e) {
                     throw new BeanCreationException("register adapter bran exception : " + clazz.getName(), e);
                 } catch (InstantiationException e) {
@@ -60,8 +61,8 @@ public class AdaptiveBeanFactoryPostProcessor implements BeanFactoryPostProcesso
                 // 如果对应的 bean 之前已经注册，则建立别名
                 Class<?>[] interfaces = clazz.getInterfaces();
                 for (final Class<?> itf : interfaces) {
-                    if (itf.isAnnotationPresent(Adaptee.class)) {
-                        String beanName = this.createAdapterBeanName(clazz);
+                    if (itf.isAnnotationPresent(DIoC.class)) {
+                        String beanName = this.createProxyBeanName(clazz);
                         Set<String> bns = new HashSet<String>(Arrays.asList(beanNames));
                         if (bns.contains(beanName)) {
                             throw new IllegalStateException("more than one adaptive class found, type : " + itf.getName());
@@ -74,15 +75,15 @@ public class AdaptiveBeanFactoryPostProcessor implements BeanFactoryPostProcesso
         }
 
         // 动态创建适配器类
-        Set<Class<?>> adaptees = reflections.getTypesAnnotatedWith(Adaptee.class, true);
-        for (final Class<?> itf : adaptees) {
+        Set<Class<?>> ditfs = reflections.getTypesAnnotatedWith(DIoC.class, true);
+        for (final Class<?> itf : ditfs) {
             if (!itf.isInterface()) {
-                throw new IllegalStateException("adaptee must be interface : " + itf.getName());
+                throw new IllegalStateException("dynamic ioc must be annotated on interface : " + itf.getName());
             }
             if (withManualAdapters.contains(itf)) {
                 continue;
             }
-            String beanName = this.createAdapterBeanName(itf);
+            String beanName = this.createProxyBeanName(itf);
             if (beanFactory.containsBean(beanName)) {
                 continue;
             }
@@ -94,9 +95,9 @@ public class AdaptiveBeanFactoryPostProcessor implements BeanFactoryPostProcesso
 
     @SuppressWarnings("unchecked")
     private <T> T createAdaptiveExtensionInstance(final Class<T> type, final ConfigurableListableBeanFactory beanFactory) {
-        final Adaptee adaptee = type.getAnnotation(Adaptee.class);
+        final DIoC di = type.getAnnotation(DIoC.class);
         Method[] methods = type.getMethods();
-        boolean withoutAdaptiveAnnotation = ArrayUtils.isEmpty(adaptee.mapping());
+        boolean withoutAdaptiveAnnotation = ArrayUtils.isEmpty(di.mapping());
         if(withoutAdaptiveAnnotation) {
             for (Method m : methods) {
                 if (m.isAnnotationPresent(Adaptive.class)) {
@@ -119,8 +120,8 @@ public class AdaptiveBeanFactoryPostProcessor implements BeanFactoryPostProcesso
                 if(ArrayUtils.isEmpty(method.getParameterTypes())) {
                     throw new UnsupportedOperationException();
                 }
-                int index = adaptee.index();
-                String[] mapping = adaptee.mapping();
+                int index = di.index();
+                String[] mapping = di.mapping();
                 Adaptive adaptive = AnnotationUtils.getInheritedAnnotation(Adaptive.class, method);
                 if(null != adaptive) {
                     index = adaptive.index() > 0 ? adaptive.index() : index;
@@ -168,28 +169,28 @@ public class AdaptiveBeanFactoryPostProcessor implements BeanFactoryPostProcesso
         return (T) enhancer.create();
     }
 
-    private Set<Class<?>> registerAdapterBean(ConfigurableListableBeanFactory beanFactory, Class<?> clazz)
+    private Set<Class<?>> registerProxyBean(ConfigurableListableBeanFactory beanFactory, Class<?> clazz)
             throws IllegalAccessException, InstantiationException {
         if (clazz.isInterface()) {
             throw new IllegalArgumentException("adapter must not be interface : " + clazz.getName());
         }
-        Set<Class<?>> adaptees = new HashSet<Class<?>>();
+        Set<Class<?>> ditfs = new HashSet<Class<?>>();
         Class<?>[] interfaces = clazz.getInterfaces();
         for (final Class<?> itf : interfaces) {
-            if (itf.isAnnotationPresent(Adaptee.class)) {
-                beanFactory.registerSingleton(this.createAdapterBeanName(itf), clazz.newInstance());
-                adaptees.add(itf);
+            if (itf.isAnnotationPresent(DIoC.class)) {
+                beanFactory.registerSingleton(this.createProxyBeanName(itf), clazz.newInstance());
+                ditfs.add(itf);
             }
         }
-        return adaptees;
+        return ditfs;
     }
 
-    private String createAdapterBeanName(Class<?> clazz) {
-        if (!clazz.isInterface() || !clazz.isAnnotationPresent(Adaptee.class)) {
-            throw new IllegalArgumentException("adaptee must be interface and annotated with @Adaptee : " + clazz.getName());
+    private String createProxyBeanName(Class<?> clazz) {
+        if (!clazz.isInterface() || !clazz.isAnnotationPresent(DIoC.class)) {
+            throw new IllegalArgumentException(clazz.getName() + " must be interface and annotated with @" + DIoC.class.getName());
         }
-        Adaptee adaptee = clazz.getAnnotation(Adaptee.class);
-        return StringUtils.isNotBlank(adaptee.value()) ? adaptee.value().trim() : clazz.getSimpleName() + "-adapter";
+        DIoC di = clazz.getAnnotation(DIoC.class);
+        return StringUtils.isNotBlank(di.value()) ? di.value().trim() : clazz.getSimpleName() + "$proxy";
     }
 
     public AdaptiveBeanFactoryPostProcessor setBasePackage(String basePackage) {

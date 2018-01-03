@@ -1,14 +1,14 @@
 package org.zhenchao.spi.spring.ext3;
 
 import org.zhenchao.spi.Adaptive;
-import org.zhenchao.spi.spring.Adaptee;
+import org.zhenchao.spi.DIoC;
 import org.zhenchao.spi.support.FactorResolver;
 
 /**
  * @author zhenchao.wang 2018-01-02 17:39
  * @version 1.0.0
  */
-@Adaptee(mapping = {"a=ext3_impl1", "b=ext3_impl2"})
+@DIoC(mapping = {"a=ext3_impl1", "b=ext3_impl2"})
 public interface Ext3Service {
 
     String one(String s);
